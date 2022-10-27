@@ -1,0 +1,69 @@
+name: Build package
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+
+concurrency:
+  group: ${{ github.ref }}
+
+jobs:
+  build_package:
+    name: Build package
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14.19.1
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use Yarn cache
+        uses: actions/cache@v3
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install deps
+        run: yarn install --production=false --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Automated Version Bump
+        id: version-bump
+        if: github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: phips28/gh-action-bump-version@master
+
+      - name: Build
+        if: github.ref == 'refs/heads/main'
+        run: yarn build
+
+      - name: Create .npmrc with token
+        if: github.ref == 'refs/heads/main'
+        env:
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sed "s/NPM_TOKEN/$NPM_TOKEN/g" .npmrc.example > .npmrc
+
+      - name: Publish package
+        if: github.ref == 'refs/heads/main'
+        run: npm publish
+
+  
