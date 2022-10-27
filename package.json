@@ -1,6 +1,6 @@
 {
   "name": "@agro-club/connected-react-router",
-  "version": "6.9.3",
+  "version": "6.9.4",
   "description": "fork of connected-react-router for React Router v6",
   "repository": {
     "type": "git",
