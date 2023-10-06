@@ -101,7 +101,7 @@ declare module '@agro-club/connected-react-router' {
   }
 
   export class ConnectedRouter<S = LocationState> extends React.Component<
-    ConnectedRouterProps<S>,
+    React.PropsWithChildren<ConnectedRouterProps<S>>,
     {}
   > {}
 
